@@ -18,7 +18,6 @@ include_directories(
     ${XERCESC_INCLUDE_DIR}
 )
 link_directories(${OCC_LIBRARY_DIR})
-
 set(RaytracingGui_LIBS
     Raytracing
     FreeCADGui
@@ -38,7 +37,12 @@ endmacro(generate_from_py2)
 generate_from_py2(FreeCADpov FreeCADpov.h)
 
 set(RaytracingGui_MOC_HDRS
+    AppearancesModel.h
     DlgSettingsRayImp.h
+    MaterialParametersModel.h
+    RenderView.h
+    TaskDlgAppearances.h
+    TaskDlgRender.h
 )
 fc_wrap_cpp(RaytracingGui_MOC_SRCS ${RaytracingGui_MOC_HDRS})
 SOURCE_GROUP("Moc" FILES ${RaytracingGui_MOC_SRCS})
@@ -59,17 +63,30 @@ SET(RaytracingGui_SRCS
     ${RaytracingGui_UIC_HDRS}
     AppRaytracingGui.cpp
     AppRaytracingGuiPy.cpp
+    AppearancesModel.cpp
+    AppearancesModel.h
     Command.cpp
+    CommandAlterRender.cpp
     DlgSettingsRay.ui
     DlgSettingsRayImp.cpp
     DlgSettingsRayImp.h
     FreeCADpov
+    MaterialParametersModel.cpp
+    MaterialParametersModel.h
     PovrayHighlighter.cpp
     PovrayHighlighter.h
     PreCompiled.cpp
     PreCompiled.h
+    RenderView.cpp
+    RenderView.h
+    TaskDlgAppearances.cpp
+    TaskDlgAppearances.h
+    TaskDlgRender.cpp
+    TaskDlgRender.h
     Workbench.cpp
     Workbench.h
+    ViewProviderRender.cpp
+    ViewProviderRender.h
 )
 
 add_library(RaytracingGui SHARED ${RaytracingGui_SRCS})

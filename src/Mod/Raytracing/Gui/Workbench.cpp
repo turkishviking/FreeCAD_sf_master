@@ -28,6 +28,8 @@
 #endif
 
 #include "Workbench.h"
+
+#include <Gui/Control.h>
 #include <Gui/ToolBarManager.h>
 #include <Gui/MenuManager.h>
 
@@ -35,6 +37,7 @@ using namespace RaytracingGui;
 
 #if 0 // needed for Qt's lupdate utility
     qApp->translate("Workbench", "&Raytracing");
+    qApp->translate("Workbench", "Render Feature");
 #endif
 
 /// @namespace RaytracingGui @class Workbench
@@ -53,11 +56,21 @@ Gui::MenuItem* Workbench::setupMenuBar() const
     Gui::MenuItem* root = StdWorkbench::setupMenuBar();
     Gui::MenuItem* item = root->findItem("&Windows");
 
+    Gui::MenuItem* part = new Gui::MenuItem();
+    root->insertItem(item, part);
+    part->setCommand("Render Feature");
+    *part << "Raytracing_CreateRenderFeature"
+          << "Separator"
+          << "Raytracing_PreviewWindow"
+          << "Raytracing_Preview"
+          << "Separator"
+          << "Raytracing_AddAppearances";
+
     Gui::MenuItem* ray = new Gui::MenuItem;
     root->insertItem(item, ray);
     ray->setCommand("&Raytracing");
     *ray
-        << "Raytracing_WriteView" 
+        << "Raytracing_WriteView"
         << "Raytracing_WriteCamera" 
         << "Raytracing_WritePart" 
         << "Separator"
@@ -71,15 +84,31 @@ Gui::MenuItem* Workbench::setupMenuBar() const
 Gui::ToolBarItem* Workbench::setupToolBars() const
 {
     Gui::ToolBarItem* root = StdWorkbench::setupToolBars();
+
+    Gui::ToolBarItem * part = new Gui::ToolBarItem(root);
+    part->setCommand("Render Feature");
+    *part << "Raytracing_CreateRenderFeature"
+          << "Separator"
+          << "Raytracing_PreviewWindow"
+          << "Raytracing_Preview"
+          << "Separator"
+          << "Raytracing_AddAppearances";
+
     Gui::ToolBarItem* ray = new Gui::ToolBarItem(root);
     ray->setCommand("Raytracing tools");
     *ray
-        << "Raytracing_WriteView" 
-        << "Raytracing_WriteCamera" 
-        << "Raytracing_WritePart" 
+        << "Raytracing_WriteView"
+        << "Raytracing_WriteCamera"
+        << "Raytracing_WritePart"
         << "Separator"
-        << "Raytracing_NewPovrayProject" 
-        << "Raytracing_NewPartSegment" 
-        << "Raytracing_ExportProject"; 
+        << "Raytracing_NewPovrayProject"
+        << "Raytracing_NewPartSegment"
+        << "Raytracing_ExportProject";
+    return root;
+}
+
+Gui::ToolBarItem* Workbench::setupCommandBars() const
+{
+    Gui::ToolBarItem* root = new Gui::ToolBarItem;
     return root;
 }

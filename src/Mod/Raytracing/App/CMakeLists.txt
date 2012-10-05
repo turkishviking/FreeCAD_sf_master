@@ -1,5 +1,5 @@
 if(MSVC)
-    add_definitions(-DFCAppRaytracing -DHAVE_ACOSH -DHAVE_ASINH -DHAVE_ATANH)
+    add_definitions(-DFCRaytracing -DHAVE_ACOSH -DHAVE_ASINH -DHAVE_ATANH)
 else(MSVC)
     add_definitions(-DHAVE_LIMITS_H -DHAVE_CONFIG_H)
 endif(MSVC)
@@ -8,6 +8,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_BINARY_DIR}
     ${Boost_INCLUDE_DIRS}
+    ${QT_INCLUDE_DIR}
     ${OCC_INCLUDE_DIR}
     ${PYTHON_INCLUDE_PATH}
     ${XERCESC_INCLUDE_DIR}
@@ -22,6 +23,9 @@ set(Raytracing_LIBS
     FreeCADApp
 )
 
+generate_from_xml(RenderCameraPy)
+generate_from_xml(RenderFeaturePy)
+
 macro(generate_from_py2 BASE_NAME OUTPUT_FILE)
     file(TO_NATIVE_PATH ${CMAKE_SOURCE_DIR}/src/Tools/PythonToCPP.py TOOL_PATH)
     file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${BASE_NAME} SOURCE_PATH)
@@ -35,20 +39,121 @@ endmacro(generate_from_py2)
 
 generate_from_py2(FreeCADpov FreeCADpov.h)
 
-SET(Raytracing_SRCS
-    AppRaytracing.cpp
-    AppRaytracingPy.cpp
+set(Raytracing_MOC_HDRS
+    RenderProcess.h
+)
+fc_wrap_cpp(Raytracing_MOC_SRCS ${Raytracing_MOC_HDRS})
+SOURCE_GROUP("Moc" FILES ${Raytracing_MOC_SRCS})
+
+SET(LuxRenderTemplates
+    Templates/Lux/Default/Default.xml
+    Templates/Lux/Default/Default.lxs
+    Templates/Lux/Classic/luxsceneClassic.lxs
+    Templates/Lux/Classic/Classic.xml
+)
+
+SET(LuxRenderPresets
+    Presets/Lux/luxPresets.xml
+    Presets/Lux/files/directLighting.lbs
+    Presets/Lux/files/globalIllumination.lbs
+    Presets/Lux/files/metropolisUnbiased.lbs
+    Presets/Lux/files/sppm.lbs
+)
+
+SET(LuxMaterials
+    Materials/Lux/materials.xml
+    Materials/Lux/Gold/Gold.xml
+    Materials/Lux/Gold/gold.lxm
+    Materials/Lux/Gold/preview.png
+    Materials/Lux/BlackLeather/blackLeather.xml
+    Materials/Lux/BlackLeather/blackLeather.lxm
+    Materials/Lux/BlackLeather/preview.jpg
+)
+
+SET(LuxRender_SRCS
+    renderer/lux/LuxRender.cpp
+    renderer/lux/LuxRender.h
+    renderer/lux/LuxRenderProcess.cpp
+    renderer/lux/LuxRenderProcess.h
+)
+SOURCE_GROUP("LuxRender" FILES ${LuxRender_SRCS})
+
+SET(RendererPlugins_SRCS
+    ${LuxRender_SRCS}
+)
+SOURCE_GROUP("RendererPlugins" FILES ${RendererPlugins_SRCS})
+
+SET(RenderModulePov_SRCS
     FreeCADpov
     PovTools.cpp
     PovTools.h
-    PreCompiled.cpp
-    PreCompiled.h
     RayFeature.cpp
     RayFeature.h
     RayProject.cpp
     RayProject.h
     RaySegment.cpp
     RaySegment.h
+)
+SOURCE_GROUP("RenderModulePov" FILES ${RenderModulePov_SRCS})
+
+SET(RenderModule_SRCS
+    ${RenderModulePov_SRCS}
+    Appearances.cpp
+    Appearances.h
+    AppRaytracing.cpp
+    AppRaytracingPy.cpp
+    LibraryMaterial.cpp
+    LibraryMaterial.h
+    PreCompiled.cpp
+    PreCompiled.h
+    PropertyRenderMaterialList.cpp
+    PropertyRenderMaterialList.h
+    RenderCamera.cpp
+    RenderCamera.h
+    RenderLights.cpp
+    RenderLights.h
+    RenderMaterial.cpp
+    RenderMaterial.h
+    RenderPreset.cpp
+    RenderPreset.h
+    RenderProcess.cpp
+    RenderProcess.h
+    RenderTemplate.cpp
+    RenderTemplate.h
+    RenderFeature.cpp
+    RenderFeature.h
+    RenderFeatureGroup.cpp
+    RenderFeature.h
+    Renderer.cpp
+    Renderer.h
+)
+SOURCE_GROUP("RenderModule" FILES ${RenderModule_SRCS})
+
+SET(Python_SRCS
+    RenderCameraPy.xml
+    RenderCameraPyImp.cpp
+    RenderFeaturePy.xml
+    RenderFeaturePyImp.cpp
+)
+SOURCE_GROUP("Python" FILES ${Python_SRCS})
+
+
+SET(Raytracing_SRCS
+    ${RenderModule_SRCS}
+    ${RendererPlugins_SRCS}
+    ${Python_SRCS}
+)
+
+SET(Raytracing_RenderMaterials
+    ${LuxMaterials}
+)
+
+SET(Raytracing_RenderPresets
+    ${LuxRenderPresets}
+)
+
+SET(Raytracing_RenderTemplates
+    ${LuxRenderTemplates}
 )
 
 SET(Raytracing_Scripts
@@ -63,14 +168,18 @@ SET(Raytracing_Templates
 add_library(Raytracing SHARED ${Raytracing_SRCS})
 target_link_libraries(Raytracing ${Raytracing_LIBS})
 
-fc_target_copy_resource(Raytracing 
+fc_target_copy_resource(Raytracing
     ${CMAKE_SOURCE_DIR}/src/Mod/Raytracing
     ${CMAKE_BINARY_DIR}/Mod/Raytracing
-    ${Raytracing_Scripts})
+    ${Raytracing_Scripts}
+    )
 
-fc_target_copy_resource(Raytracing 
+fc_target_copy_resource(Raytracing
     ${CMAKE_SOURCE_DIR}/src/Mod/Raytracing
     ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/Mod/Raytracing
+    ${Raytracing_RenderMaterials}
+    ${Raytracing_RenderPresets}
+    ${Raytracing_RenderTemplates}
     ${Raytracing_Templates})
 
 if(MSVC)

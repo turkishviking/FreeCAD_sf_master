@@ -28,16 +28,27 @@
 
 #include <Base/Console.h>
 #include <Base/Interpreter.h>
+#include <App/Application.h>
+
+#include "RenderCameraPy.h"
+
 
 #include "RayFeature.h"
 #include "RayProject.h"
 #include "RaySegment.h"
 
+#include "RenderFeatureGroup.h"
+#include "renderer/lux/LuxRender.h"
+#include "RenderFeature.h"
+#include "Appearances.h"
+
 extern struct PyMethodDef Raytracing_methods[];
 
+PyDoc_STRVAR(module_Raytracing_doc,
+"This module is the Raytracing module.");
 
 extern "C" {
-void AppRaytracingExport initRaytracing()
+void RaytracingExport initRaytracing()
 {
     // load dependent module
     try {
@@ -47,15 +58,32 @@ void AppRaytracingExport initRaytracing()
         PyErr_SetString(PyExc_ImportError, e.what());
         return;
     }
+     PyObject* raytracingModule = Py_InitModule3("Raytracing", Raytracing_methods, module_Raytracing_doc);   /* mod name, table ptr */
 
-	Raytracing::RaySegment       ::init();
-	Raytracing::RayFeature       ::init();
-	Raytracing::RayProject       ::init();
+      // Add Types to module
+      Base::Interpreter().addType(&Raytracing::RenderCameraPy::Type,raytracingModule,"RenderCamera");
+
+      Raytracing::RenderCamera        ::init();
+      Raytracing::RenderFeature       ::init();
+      Raytracing::RenderFeaturePython ::init();
+      Raytracing::LuxRender           ::init();
+
+      Raytracing::RenderFeatureGroup  ::init();
+      Raytracing::PropertyRenderMaterialList::init();
+      Raytracing::RenderMaterial::init();
+
+      Raytracing::RaySegment          ::init();
+      Raytracing::RayFeature          ::init();
+      Raytracing::RayProject          ::init();
 
 
-    (void) Py_InitModule("Raytracing", Raytracing_methods);   /* mod name, table ptr */
-    Base::Console().Log("Loading Raytracing module... done\n");
+      // Load all the library materials
+      // TODO we need enable Appearances to scan recursivly - temporarily use Lux as default directory
+      std::string matPath = App::Application::getResourceDir() + "Mod/Raytracing/Materials/Lux";
+      Raytracing::Appearances().setUserMaterialsPath(matPath.c_str());
+      Raytracing::Appearances().scanMaterials();
 
+      Base::Console().Log("Loading Raytracing module... done\n");
 }
 
 } // extern "C" {

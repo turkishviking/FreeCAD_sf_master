@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<GenerateModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="generateMetaModel_Module.xsd">
+  <PythonExport
+    Father="DocumentObjectGroupPy"
+    Name="RenderFeaturePy"
+    Twin="RenderFeature"
+    TwinPointer="RenderFeature"
+    Include="Mod/Raytracing/App/RenderFeature.h"
+    Namespace="Raytracing"
+    FatherInclude="App/DocumentObjectGroupPy.h"
+    FatherNamespace="App">
+    <Documentation>
+      <Author Licence="LGPL" Name="Luke Parry" EMail="l.parry@warwick.ac.uk" />
+      <UserDocu>With this objects you can handle render feature</UserDocu>
+    </Documentation>
+    <Methode Name="preview">
+      <Documentation>
+        <UserDocu>Start a Render Preview</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="render">
+      <Documentation>
+        <UserDocu>Start a Render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="finish">
+      <Documentation>
+        <UserDocu>Stop the Render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setRenderer">
+      <Documentation>
+        <UserDocu>Set the Render plugin to use</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setRenderSize">
+      <Documentation>
+        <UserDocu>Set the output size for the render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setUpdateInterval">
+      <Documentation>
+        <UserDocu>Set the update interval for the preview</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setOutputPath">
+      <Documentation>
+        <UserDocu>Set the output path for the render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="attachRenderCamera">
+      <Documentation>
+        <UserDocu>Attach a render camera to the Renderer</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="removeRenderMaterial">
+      <Documentation>
+        <UserDocu>Remove a render material given an index</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setRenderTemplate">
+      <Documentation>
+        <UserDocu>Set the render template to be used</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setRenderPreset">
+      <Documentation>
+        <UserDocu>Set the render preset</UserDocu>
+      </Documentation>
+    </Methode>
+     <Methode Name="setCamera">
+      <Documentation>
+        <UserDocu>Set the properties for the current render camera</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setBBox">
+      <Documentation>
+        <UserDocu>Set the properties for the current render camera</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="removeRenderMaterialFromPart">
+      <Documentation>
+        <UserDocu>Remove a render material from a part feature</UserDocu>
+      </Documentation>
+    </Methode>    
+    <Methode Name="clear">
+      <Documentation>
+        <UserDocu>Clear the camera, process, lights</UserDocu>
+      </Documentation>
+    </Methode>
+  </PythonExport>
+</GenerateModel>

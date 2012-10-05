@@ -39,7 +39,6 @@
 #include <Base/Sequencer.h>
 #include <App/ComplexGeoData.h>
 
-
 #include "PovTools.h"
 
 using Base::Console;
@@ -47,7 +46,6 @@ using Base::Console;
 using namespace Raytracing;
 using namespace std;
 
-#include "PovTools.h"
 
 //#include "TempCamera.inc"
 //camera {
@@ -393,9 +391,11 @@ void PovTools::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
     Standard_Integer i;
     // geting size and create the array
     nbNodesInFace = aPoly->NbNodes();
-    nbTriInFace = aPoly->NbTriangles();
-    *vertices = new gp_Vec[nbNodesInFace];
+    nbTriInFace   = aPoly->NbTriangles();
+
+    *vertices      = new gp_Vec[nbNodesInFace];
     *vertexnormals = new gp_Vec[nbNodesInFace];
+
     for (i=0; i < nbNodesInFace; i++) {
         (*vertexnormals)[i]= gp_Vec(0.0,0.0,0.0);
     }
@@ -480,7 +480,7 @@ void PovTools::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
 
             clNormal = clPropOfFace.Normal();
             gp_Vec temp = clNormal;
-            //Base::Console().Log("unterschied:%.2f",temp.dot((*vertexnormals)[i]));
+
             if ( temp * (*vertexnormals)[i] < 0 )
                 temp = -temp;
             (*vertexnormals)[i] = temp;

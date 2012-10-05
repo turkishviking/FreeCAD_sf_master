@@ -33,6 +33,7 @@
 # include <Inventor/nodes/SoOrthographicCamera.h>
 # include <vector>
 # include <Inventor/nodes/SoPerspectiveCamera.h>
+# include <Inventor/SbViewVolume.h>
 # include <QApplication>
 # include <QMessageBox>
 #endif
@@ -43,26 +44,32 @@
 #include <App/Document.h>
 #include <App/DocumentObject.h>
 #include <App/Material.h>
+
 #include <Gui/Application.h>
 #include <Gui/Document.h>
 #include <Gui/Command.h>
+#include <Gui/Control.h>
 #include <Gui/FileDialog.h>
 #include <Gui/View.h>
 #include <Gui/ViewProvider.h>
 #include <Gui/Selection.h>
 #include <Gui/FileDialog.h>
 #include <Gui/MainWindow.h>
+#include <Gui/View3DInventor.h>
+#include <Gui/View3DInventorViewer.h>
+
 
 #include <Mod/Raytracing/App/RayFeature.h>
 #include <Mod/Raytracing/App/RaySegment.h>
 #include <Mod/Raytracing/App/RayProject.h>
 #include <Mod/Part/App/PartFeature.h>
-  
-#include "FreeCADpov.h"
 
+#include "FreeCADpov.h"
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+// Helpers
+using namespace Raytracing;
 
 //===========================================================================
 // CmdRaytracingWriteCamera
@@ -204,6 +211,7 @@ bool CmdRaytracingWritePart::isActive(void)
     return Gui::Selection().countObjectsOfType(Part::Feature::getClassTypeId()) == 1;
 }
 
+
 //===========================================================================
 // CmdRaytracingWriteView
 //===========================================================================
@@ -228,7 +236,7 @@ void CmdRaytracingWriteView::activated(int iMsg)
     if (ppReturn) {
         std::string str(ppReturn);
         if (str.find("PerspectiveCamera") == std::string::npos) {
-            int ret = QMessageBox::warning(Gui::getMainWindow(), 
+            int ret = QMessageBox::warning(Gui::getMainWindow(),
                 qApp->translate("CmdRaytracingWriteView","No perspective camera"),
                 qApp->translate("CmdRaytracingWriteView","The current view camera is not perspective"
                                 " and thus the result of the povray image later might look different to"
@@ -244,7 +252,7 @@ void CmdRaytracingWriteView::activated(int iMsg)
     filter << QObject::tr("All Files (*.*)");
     QString fn = Gui::FileDialog::getSaveFileName(Gui::getMainWindow(),
         QObject::tr("Export page"), QString(), filter.join(QLatin1String(";;")));
-    if (fn.isEmpty()) 
+    if (fn.isEmpty())
         return;
     std::string cFullName = (const char*)fn.toUtf8();
 
@@ -285,7 +293,6 @@ bool CmdRaytracingWriteView::isActive(void)
 
     return false;
 }
-
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //===========================================================================
