@@ -825,6 +825,7 @@ public:
                     "App.ActiveDocument.%s.addConstraint(Sketcher.Constraint('%s',%i,%i,%i,%i)) ",
                     sketchgui->getObject()->getNameInDocument(), constrType.c_str(),
                     previousCurve, previousPosId, lastCurve, lastStartPosId);
+
                 if (Mode == STATUS_Close) {
                     int firstGeoId;
                     Sketcher::PointPos firstPosId;
@@ -1061,6 +1062,7 @@ public:
 
             SbString text;
             text.sprintf(" (%.1fR,%.1fdeg)", radius, angle * 180 / M_PI);
+
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -1086,8 +1088,9 @@ public:
 
             SbString text;
             text.sprintf(" (%.1fR,%.1fdeg)", radius, arcAngle * 180 / M_PI);
+
             setPositionText(onSketchPos, text);
-            
+
             sketchgui->drawEdit(EditCurve);
             if (seekAutoConstraint(sugConstr3, onSketchPos, Base::Vector2D(0.f,0.f))) {
                 renderSuggestConstraintsCursor(sugConstr3);
@@ -1295,6 +1298,7 @@ public:
 
             SbString text;
             text.sprintf(" (%.1fR)", radius);
+
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);

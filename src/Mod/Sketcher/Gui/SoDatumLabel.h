@@ -36,6 +36,7 @@
 #include <Inventor/fields/SoMFVec3f.h>
 #include <Inventor/SbBox3f.h>
 #include <Inventor/fields/SoSFImage.h>
+#include <3rdParty/salomesmesh/inc/Rn.h>
 
 namespace SketcherGui {
 
@@ -54,6 +55,7 @@ public:
   RADIUS,
   SYMMETRIC
   };
+
 
     static void initClass();
     SoDatumLabel();

@@ -262,7 +262,7 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
       renderView(vp)
 {
     assert(renderView);
-    documentName = renderView->getObject()->getDocument()->getName();
+    setDocumentName(renderView->getObject()->getDocument()->getName());
 
     RenderMaterial *mat;
     LibraryMaterial *libMat;
@@ -305,7 +305,7 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
     ctxt->setContextProperty(QString::fromAscii("materialsModel"), materialsModel); // Render Materials
     ctxt->setContextProperty(QString::fromAscii("renderFeature") , featViewData);
 
-   
+
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
     view->setSource(QUrl(QString::fromAscii("qrc:/qml/renderUi.qml"))); // Load the Main QML File
 
@@ -376,7 +376,7 @@ void TaskDlgRender::preview()
 {
 
     RenderFeature *feat = this->getRenderView()->getRenderFeature();
-    feat->reset(); 
+    feat->reset();
     Gui::Document * doc = Gui::Application::Instance->activeDocument();
 
         // get all objects of the active document
@@ -490,7 +490,7 @@ void TaskDlgRender::onEditMaterial(int index)
     dlg->openEditMaterialDialog(matClone);
     Gui::Control().closeDialog();
     Gui::Control().showDialog(dlg);
-  
+
 }
 
 void TaskDlgRender::onSelectionChanged(const Gui::SelectionChanges& msg)
@@ -529,7 +529,7 @@ void TaskDlgRender::previewWindow()
 
    // Check if a renderer camera exists
     RenderFeature *feat = this->getRenderView()->getRenderFeature();
-    feat->reset(); 
+    feat->reset();
     RenderCamera *renderCam = feat->getCamera();
     if(!renderCam)
         return;
@@ -755,7 +755,7 @@ bool TaskDlgRender::reject()
 //     Gui::Command::doCommand(Gui::Command::Gui,"Gui.getDocument('%s').resetEdit()", document.c_str());
 //     Gui::Command::doCommand(Gui::Command::Doc,"App.getDocument('%s').recompute()", document.c_str());
 
-    std::string document = documentName; // needed because resetEdit() deletes this instance
+    std::string document = getDocumentName(); // needed because resetEdit() deletes this instance
     Gui::Command::doCommand(Gui::Command::Gui,"Gui.getDocument('%s').resetEdit()", document.c_str());
     return true;
 }
