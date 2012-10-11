@@ -36,7 +36,7 @@
 # include <Inventor/nodes/SoDrawStyle.h>
 # include <Inventor/nodes/SoFont.h>
 # include <Inventor/nodes/SoText2.h>
-# include <Inventor/nodes/SoAsciiText.h>
+# include <Inventor/nodes/SoUTFText.h>
 # include <Inventor/nodes/SoTranslation.h>
 # include <Inventor/nodes/SoRotationXYZ.h>
 # include <Inventor/nodes/SoImage.h>
@@ -64,7 +64,7 @@ const char* ViewProviderAnnotation::RotationAxisEnums[]= {"X","Y","Z",NULL};
 PROPERTY_SOURCE(Gui::ViewProviderAnnotation, Gui::ViewProviderDocumentObject)
 
 
-ViewProviderAnnotation::ViewProviderAnnotation() 
+ViewProviderAnnotation::ViewProviderAnnotation()
 {
     ADD_PROPERTY(TextColor,(1.0f,1.0f,1.0f));
     ADD_PROPERTY(Justification,((long)0));
@@ -80,7 +80,7 @@ ViewProviderAnnotation::ViewProviderAnnotation()
     pFont->ref();
     pLabel = new SoText2();
     pLabel->ref();
-    pLabel3d = new SoAsciiText();
+    pLabel3d = new SoUTFText();
     pLabel3d->ref();
     pColor = new SoBaseColor();
     pColor->ref();
@@ -116,15 +116,15 @@ void ViewProviderAnnotation::onChanged(const App::Property* prop)
     else if (prop == &Justification) {
         if (Justification.getValue() == 0) {
             pLabel->justification = SoText2::LEFT;
-            pLabel3d->justification = SoAsciiText::LEFT;
+            pLabel3d->justification = SoUTFText::LEFT;
         }
         else if (Justification.getValue() == 1) {
             pLabel->justification = SoText2::RIGHT;
-            pLabel3d->justification = SoAsciiText::RIGHT;
+            pLabel3d->justification = SoUTFText::RIGHT;
         }
         else if (Justification.getValue() == 2) {
             pLabel->justification = SoText2::CENTER;
-            pLabel3d->justification = SoAsciiText::CENTER;
+            pLabel3d->justification = SoUTFText::CENTER;
         }
     }
     else if (prop == &FontSize) {
@@ -211,7 +211,7 @@ void ViewProviderAnnotation::attach(App::DocumentObject* f)
 
 void ViewProviderAnnotation::updateData(const App::Property* prop)
 {
-    if (prop->getTypeId() == App::PropertyStringList::getClassTypeId() && 
+    if (prop->getTypeId() == App::PropertyStringList::getClassTypeId() &&
         strcmp(prop->getName(),"LabelText") == 0) {
         const std::vector<std::string> lines = static_cast<const App::PropertyStringList*>(prop)->getValues();
         int index=0;
@@ -219,7 +219,7 @@ void ViewProviderAnnotation::updateData(const App::Property* prop)
         pLabel3d->string.setNum((int)lines.size());
         for (std::vector<std::string>::const_iterator it = lines.begin(); it != lines.end(); ++it) {
             pLabel->string.set1Value(index, SbString(it->c_str()));
-            pLabel3d->string.set1Value(index, SbString(it->c_str()));
+            pLabel3d->string.set1Value(index, SbUTFString(*it, UTFString::ENCODING_UTF8));
             index++;
         }
     }
@@ -239,7 +239,7 @@ const char* ViewProviderAnnotationLabel::JustificationEnums[]= {"Left","Right","
 PROPERTY_SOURCE(Gui::ViewProviderAnnotationLabel, Gui::ViewProviderDocumentObject)
 
 
-ViewProviderAnnotationLabel::ViewProviderAnnotationLabel() 
+ViewProviderAnnotationLabel::ViewProviderAnnotationLabel()
 {
     ADD_PROPERTY(TextColor,(1.0f,1.0f,1.0f));
     ADD_PROPERTY(BackgroundColor,(0.0f,0.333f,1.0f));
@@ -342,7 +342,7 @@ void ViewProviderAnnotationLabel::attach(App::DocumentObject* f)
 
 void ViewProviderAnnotationLabel::updateData(const App::Property* prop)
 {
-    if (prop->getTypeId() == App::PropertyStringList::getClassTypeId() && 
+    if (prop->getTypeId() == App::PropertyStringList::getClassTypeId() &&
         strcmp(prop->getName(),"LabelText") == 0) {
         drawImage(static_cast<const App::PropertyStringList*>(prop)->getValues());
     }

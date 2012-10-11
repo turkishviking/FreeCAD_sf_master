@@ -38,13 +38,17 @@
 # include <QFontMetrics>
 # include <QGLWidget>
 # include <QPainter>
+#include <QMessageBox>
 # include <QPen>
+#include <QString>
+#include <QChar>
 # include <Inventor/SoPrimitiveVertex.h>
 # include <Inventor/actions/SoGLRenderAction.h>
 # include <Inventor/misc/SoState.h>
 # include <math.h>
 #endif
 
+#include <Gui/Inventor/base/UTFString.h>
 #include <Inventor/actions/SoGetMatrixAction.h>
 #include <Inventor/elements/SoFontNameElement.h>
 #include <Inventor/elements/SoFontSizeElement.h>
@@ -95,7 +99,7 @@ SoDatumLabel::SoDatumLabel()
 
 void SoDatumLabel::drawImage()
 {
-    const SbString* s = string.getValues(0);
+    const SbUTFString* s = string.getValues(0);
     int num = string.getNum();
     if (num == 0) {
         this->image = SoSFImage();
@@ -104,7 +108,11 @@ void SoDatumLabel::drawImage()
 
     QFont font(QString::fromAscii(name.getValue()), size.getValue());
     QFontMetrics fm(font);
-    QString str = QString::fromUtf8(s[0].getString());
+
+    const UTFString myUtfString =  this->string.getValues(0)->getUTFString();
+
+    QString str = QString::fromUtf8(myUtfString.createUTF8EncodedString().data());
+
     int w = fm.width(str);
     int h = fm.height();
 
@@ -120,7 +128,7 @@ void SoDatumLabel::drawImage()
 
     QImage image(w, h,QImage::Format_ARGB32_Premultiplied);
     image.fill(0x00000000);
-    
+
     QPainter painter(&image);
     painter.setRenderHint(QPainter::Antialiasing);
 
@@ -192,7 +200,7 @@ void SoDatumLabel::generatePrimitives(SoAction * action)
         float c = cos(angle);
 
         img1 = SbVec3f((img1[0] * c) - (img1[1] * s), (img1[0] * s) + (img1[1] * c), 0.f);
-        img2 = SbVec3f((img2[0] * c) - (img2[1] * s), (img2[0] * s) + (img2[1] * c), 0.f); 
+        img2 = SbVec3f((img2[0] * c) - (img2[1] * s), (img2[0] * s) + (img2[1] * c), 0.f);
         img3 = SbVec3f((img3[0] * c) - (img3[1] * s), (img3[0] * s) + (img3[1] * c), 0.f);
         img4 = SbVec3f((img4[0] * c) - (img4[1] * s), (img4[0] * s) + (img4[1] * c), 0.f);
 
@@ -401,7 +409,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
     const SbViewVolume & vv = SoViewVolumeElement::get(state);
     float scale = vv.getWorldToScreenScale(SbVec3f(0.f,0.f,0.f), 0.4f);
 
-    const SbString* s = string.getValues(0);
+    const SbUTFString* s = string.getValues(0);
     bool hasText = (s->getLength() > 0) ? true : false;
 
     SbVec2s size;
@@ -590,7 +598,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         // Get the Points
         SbVec3f p1 = pnts[0];
         SbVec3f p2 = pnts[1];
-        
+
         SbVec3f dir = (p2-p1);
         dir.normalize();
         SbVec3f norm (-dir[1],dir[0],0);
@@ -669,7 +677,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         float range      = this->param3.getValue();
         float endangle   = startangle + range;
 
-        
+
         float r = 2*length;
 
         // Set the Text label angle to zero
@@ -814,7 +822,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         std::vector<SbVec3f> corners;
         corners.push_back(p1);
         corners.push_back(p2);
- 
+
         float minX = p1[0], minY = p1[1], maxX = p1[0] , maxY = p1[1];
         for (std::vector<SbVec3f>::iterator it=corners.begin(); it != corners.end(); ++it) {
             minX = ((*it)[0] < minX) ? (*it)[0] : minX;

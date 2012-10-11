@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) 2011-2012 Luke Parry <l.parry@warwick.ac.uk>            *
+ *   Copyright (c) 2012 Luke Parry <l.parry@warwick.ac.uk>                 *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -20,72 +20,74 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef SKETCHERGUI_SODATUMLABEL_H
-#define SKETCHERGUI_SODATUMLABEL_H
+#ifndef GUI_INVENTOR_SOUTFTEXT_H
+#define GUI_INVENTOR_SOUTFTEXT_H
 
 #include <Inventor/fields/SoSubField.h>
 #include <Inventor/nodes/SoSubNode.h>
 #include <Inventor/nodes/SoShape.h>
-#include <Inventor/fields/SoSFColor.h>
-#include <Inventor/fields/SoSFEnum.h>
 #include <Inventor/fields/SoSFFloat.h>
-#include <Inventor/fields/SoSFBool.h>
-#include <Inventor/fields/SoSFName.h>
+#include <Inventor/fields/SoSFEnum.h>
+#include <Inventor/fields/SoMFFloat.h>
+#include <Inventor/lists/SbList.h>
+
 #include <Gui/Inventor/fields/SoMFUTFString.h>
-#include <Inventor/fields/SoSFInt32.h>
-#include <Inventor/fields/SoMFVec3f.h>
-#include <Inventor/SbBox3f.h>
-#include <Inventor/fields/SoSFImage.h>
 
-using namespace Gui::Inventor;
+class SoGlyph;
 
-namespace SketcherGui {
+namespace Gui { namespace Inventor {
 
-class SketcherGuiExport SoDatumLabel : public SoShape {
-    typedef SoShape inherited;
+class GuiExport SoUTFText : public SoShape {
+  typedef SoShape inherited;
 
-    SO_NODE_HEADER(SoDatumLabel);
+  SO_NODE_HEADER(SoUTFText);
 
 public:
-  enum Type
-  {
-  ANGLE,
-  DISTANCE,
-  DISTANCEX,
-  DISTANCEY,
-  RADIUS,
-  SYMMETRIC
+  static void initClass(void);
+  SoUTFText(void);
+
+  enum Justification {
+    LEFT = 1,
+    RIGHT,
+    CENTER
   };
 
-    static void initClass();
-    SoDatumLabel();
+  SoMFUTFString string;
+  SoSFFloat spacing;
+  SoSFEnum justification;
+  SoMFFloat width;
 
-    SoMFUTFString string;
-    SoSFColor  textColor;
-    SoSFEnum   datumtype;
-    SoSFName   name;
-    SoSFInt32  size;
-    SoSFFloat  param1;
-    SoSFFloat  param2;
-    SoSFFloat  param3;
-    SoMFVec3f  pnts;
-    SoSFImage  image;
-    SoSFFloat  lineWidth;
+  virtual void GLRender(SoGLRenderAction * action);
+  virtual void getPrimitiveCount(SoGetPrimitiveCountAction * action);
 
 protected:
-    virtual ~SoDatumLabel() {};
-    virtual void GLRender(SoGLRenderAction *action);
-    virtual void computeBBox(SoAction *, SbBox3f &box, SbVec3f &center);
-    virtual void generatePrimitives(SoAction * action);
+  virtual ~SoUTFText();
+
+  virtual void computeBBox(SoAction * action, SbBox3f & box, SbVec3f & center);
+  virtual void generatePrimitives(SoAction *);
+
+  virtual SoDetail * createTriangleDetail(SoRayPickAction * action,
+                                          const SoPrimitiveVertex * v1,
+                                          const SoPrimitiveVertex * v2,
+                                          const SoPrimitiveVertex * v3,
+                                          SoPickedPoint * pp);
+  virtual void notify(SoNotList * list);
 
 private:
-    void drawImage();
-    SbBox3f bbox;
-    float imgWidth;
-    float imgHeight;
+
+  float getWidth(const int idx, const float fontsize);
+  void setUpGlyphs(SoState * state);
+  void calculateStringStretch(const int i, float & stretchfactor, float & stretchlength, SoState *state);
+
+  bool cacheValid() { return cache; }
+  void invalidateCache();
+  SbList <float> glyphwidths;
+  SbList <float> stringwidths;
+  SbBox3f maxglyphbbox;
+  std::list<SoGlyph *> glyphCache;
+  bool cache;
 };
 
 }
-
-
-#endif // SKETCHERGUI_SODATUMLABEL_H
+}
+#endif //GUI_INVENTOR_SOUTFTEXT_H

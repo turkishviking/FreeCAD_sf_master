@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) 2011-2012 Luke Parry <l.parry@warwick.ac.uk>            *
+ *   Copyright (c) 2012 Luke Parry <l.parry@warwick.ac.uk>                 *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -20,72 +20,38 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef SKETCHERGUI_SODATUMLABEL_H
-#define SKETCHERGUI_SODATUMLABEL_H
+#ifndef GUI_INVENTOR_SOMFUTFSTRING_H
+#define GUI_INVENTOR_SOMFUTFSTRING_H
 
 #include <Inventor/fields/SoSubField.h>
-#include <Inventor/nodes/SoSubNode.h>
-#include <Inventor/nodes/SoShape.h>
-#include <Inventor/fields/SoSFColor.h>
-#include <Inventor/fields/SoSFEnum.h>
-#include <Inventor/fields/SoSFFloat.h>
-#include <Inventor/fields/SoSFBool.h>
-#include <Inventor/fields/SoSFName.h>
-#include <Gui/Inventor/fields/SoMFUTFString.h>
-#include <Inventor/fields/SoSFInt32.h>
-#include <Inventor/fields/SoMFVec3f.h>
-#include <Inventor/SbBox3f.h>
-#include <Inventor/fields/SoSFImage.h>
+#include <string>
+#include "../base/SbUTFString.h"
 
 using namespace Gui::Inventor;
 
-namespace SketcherGui {
+namespace Gui { namespace Inventor {
 
-class SketcherGuiExport SoDatumLabel : public SoShape {
-    typedef SoShape inherited;
+class GuiExport SoMFUTFString : public SoMField {
 
-    SO_NODE_HEADER(SoDatumLabel);
+  SO_MFIELD_HEADER(SoMFUTFString, SbUTFString, const SbUTFString &);
 
 public:
-  enum Type
-  {
-  ANGLE,
-  DISTANCE,
-  DISTANCEX,
-  DISTANCEY,
-  RADIUS,
-  SYMMETRIC
-  };
+  static void initClass(void);
 
-    static void initClass();
-    SoDatumLabel();
+  void setValues(const int start, const int numarg, const char * strings[]);
+  void setValues(const int start, const int numarg, const std::string * strings[]);
+  void setValues(const int start, const int numarg, const wchar_t * strings[]);
 
-    SoMFUTFString string;
-    SoSFColor  textColor;
-    SoSFEnum   datumtype;
-    SoSFName   name;
-    SoSFInt32  size;
-    SoSFFloat  param1;
-    SoSFFloat  param2;
-    SoSFFloat  param3;
-    SoMFVec3f  pnts;
-    SoSFImage  image;
-    SoSFFloat  lineWidth;
+  void setValue(const char * str);
+  void setValue(const wchar_t *str);
+  void setValue(const std::string str);
+  void setValue(const std::string &text, UTFString::Encoding encoding);
 
-protected:
-    virtual ~SoDatumLabel() {};
-    virtual void GLRender(SoGLRenderAction *action);
-    virtual void computeBBox(SoAction *, SbBox3f &box, SbVec3f &center);
-    virtual void generatePrimitives(SoAction * action);
-
-private:
-    void drawImage();
-    SbBox3f bbox;
-    float imgWidth;
-    float imgHeight;
+//   void deleteText(const int fromline, const int fromchar,
+//                   const int toline, const int tochar);
 };
 
 }
+}
 
-
-#endif // SKETCHERGUI_SODATUMLABEL_H
+#endif // GUI_INVENTOR_SOMFUTFSTRING_H

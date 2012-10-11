@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) 2009 Jürgen Riegel <juergen.riegel@web.de>              *
+ *   Copyright (c) 2009 JÃ¼rgen Riegel <juergen.riegel@web.de>              *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -1681,7 +1681,7 @@ void ViewProviderSketch::updateColor(void)
                                type == Sketcher::Distance ||
                                type == Sketcher::DistanceX || type == Sketcher::DistanceY);
 
-        // Non DatumLabel Nodes will have a material excluding coincident 
+        // Non DatumLabel Nodes will have a material excluding coincident
         bool hasMaterial = false;
 
         SoMaterial *m;
@@ -1694,7 +1694,7 @@ void ViewProviderSketch::updateColor(void)
             if (hasDatumLabel) {
                 SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(0));
                 l->textColor = SelectColor;
-            } else if (hasMaterial) 
+            } else if (hasMaterial)
               m->diffuseColor = SelectColor;
         } else if (edit->PreselectConstraint == i) {
             if (hasDatumLabel) {
@@ -2309,13 +2309,17 @@ Restart:
                     } else
                         break;
 
+                    QString str;
+
                     SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(0));
                     if ((Constr->Type == DistanceX || Constr->Type == DistanceY) &&
                         Constr->FirstPos != Sketcher::none && Constr->Second == Constraint::GeoUndef)
                         // display negative sign for absolute coordinates
-                        asciiText->string = SbString().sprintf("%.2f",Constr->Value);
-                    else // hide negative sign
-                        asciiText->string = SbString().sprintf("%.2f",std::abs(Constr->Value));
+                        str = QString::fromUtf8("%1").arg(Constr->Value, 0, 'f', 2);
+                     else // hide negative sign
+                        str = QString::fromUtf8("%1").arg(Constr->Value, 0, 'f', 2);
+
+                    asciiText->string = SbUTFString(str.toUtf8().data(), UTFString::ENCODING_UTF8);
 
                     if (Constr->Type == Distance)
                         asciiText->datumtype = SoDatumLabel::DISTANCE;
@@ -2530,8 +2534,10 @@ Restart:
                     } else
                         break;
 
+                    QString str = QString::fromUtf8("%1\xc2\xb0").arg(Base::toDegrees<double>(std::abs(Constr->Value)), 0, 'f', 2);
+
                     SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(0));
-                    asciiText->string    = SbString().sprintf("%.2f",Base::toDegrees<double>(std::abs(Constr->Value)));
+                    asciiText->string       = SbUTFString(str.toUtf8().data(), UTFString::ENCODING_UTF8);
                     asciiText->datumtype = SoDatumLabel::ANGLE;
                     asciiText->param1    = Constr->LabelDistance;
                     asciiText->param2    = startangle;
@@ -2577,8 +2583,10 @@ Restart:
                     SbVec3f p1(pnt1.x,pnt1.y,zConstr);
                     SbVec3f p2(pnt2.x,pnt2.y,zConstr);
 
+                    QString str = QString::fromUtf8("%1").arg(Constr->Value, 0, 'f', 2);
+
                     SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(0));
-                    asciiText->string       = SbString().sprintf("%.2f",Constr->Value);
+                    asciiText->string       = SbUTFString(str.toUtf8().data(), UTFString::ENCODING_UTF8);
                     asciiText->datumtype    = SoDatumLabel::RADIUS;
                     asciiText->param1       = Constr->LabelDistance;
                     asciiText->param2       = Constr->LabelPosition;
@@ -3085,7 +3093,7 @@ void ViewProviderSketch::setPositionText(const Base::Vector2D &Pos, const SbStri
     edit->textX->string = text;
     edit->textPos->translation = SbVec3f(Pos.fX,Pos.fY,zText);
 }
-  
+
 void ViewProviderSketch::setPositionText(const Base::Vector2D &Pos)
 {
     SbString text;

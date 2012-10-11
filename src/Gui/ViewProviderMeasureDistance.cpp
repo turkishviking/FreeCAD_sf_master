@@ -56,7 +56,7 @@ using namespace Gui;
 PROPERTY_SOURCE(Gui::ViewProviderMeasureDistance, Gui::ViewProviderDocumentObject)
 
 
-ViewProviderMeasureDistance::ViewProviderMeasureDistance() 
+ViewProviderMeasureDistance::ViewProviderMeasureDistance()
 {
     ADD_PROPERTY(TextColor,(0.0f,0.0f,0.0f));
     ADD_PROPERTY(LineColor,(1.0f,1.0f,1.0f));

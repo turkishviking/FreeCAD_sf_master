@@ -29,7 +29,6 @@
 
 class SoFont;
 class SoText2;
-class SoAsciiText;
 class SoBaseColor;
 class SoTranslation;
 class SoTransform;
@@ -39,6 +38,11 @@ class SoCoordinate3;
 
 namespace Gui
 {
+
+namespace Inventor
+{
+    class SoUTFText;
+}
 
 class GuiExport ViewProviderAnnotation : public ViewProviderDocumentObject
 {
@@ -69,7 +73,7 @@ protected:
 private:
     SoFont           * pFont;
     SoText2          * pLabel;
-    SoAsciiText      * pLabel3d;
+    Inventor::SoUTFText   * pLabel3d;
     SoBaseColor      * pColor;
     SoTranslation    * pTranslation;
     SoRotationXYZ    * pRotationXYZ;
