@@ -65,8 +65,19 @@ public:
       PLUGIN_PYTHON
     };
 
-  // A TPG Feature must be constructed with a TPGFeature
+    /**
+     * Default Constructor
+     */
     TPG();
+    
+    /**
+     * Complimentary constructor to assign plugin properties
+     */
+    TPG(const QString &TPGId, const QString &TPGName, const QString &TPGDescription);
+
+    /**
+     * Default Destructor
+     */
     ~TPG();
 
     virtual void initialise(TPGFeature *feat);
@@ -95,7 +106,7 @@ public:
 
     virtual QString getId() { return id; }
     virtual QString getName() { return name; }
-    virtual QString getDescription() { printf("TPG.getDescription()\n");return description; }
+    virtual QString getDescription() { printf("TPG.getDescription()\n"); return description; }
 
     /* [arobinson] Commented all this out until it is needed, it was making
          * things more complex when making the of the Python API
@@ -114,27 +125,6 @@ public:
     //virtual void getToolPath() = 0; // NOTE we need to devise the storage format for the TOOLPath output
 
     State getState() { return state; }
-
-    /// Sets the basic identifiers
-    void setName(const std::string &str)
-    {
-        this->name = QString::fromStdString(str);
-    }
-
-    /// A unique identifier
-
-    void setId(const std::string &str)
-    {
-        this->id = QString::fromStdString(str);
-    }
-
-    /// A description
-    void setDescription(const std::string &str)
-    {
-        this->description = QString::fromStdString(str);
-    }
-    QString setDescription(const QString &val) { description =  val; }
-
 
     /**
      * Get a list (vector<QString>) of action names this TPG supports.
