@@ -51,8 +51,9 @@ class CamExport LibTPG : public TPG
 {
 
 public:
-    LibTPG();
-    ~LibTPG();
+  LibTPG(){}
+  LibTPG(TPGDescriptor *descriptor);
+  ~LibTPG();
 
 protected:
 };
