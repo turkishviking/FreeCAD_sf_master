@@ -68,14 +68,11 @@ void TPGFactoryInst::clearDescriptors()
 
 TPG * TPGFactoryInst::getPlugin(QString id)
 {
-//    std::map<const std::string, Base::AbstractProducer*>::const_iterator it;
-//    it = _mpcProducers.find(id.toStdString().c_str());
-//    if (it != _mpcProducers.end()) {
-//        //it->second->setValue(v);
-//        return static_cast<TPG *>(it->second->Produce());
-//    }
+    for(std::vector<TPGDescriptor *>::iterator it = d->tpgList.begin(); it != d->tpgList.end(); ++it) {
+        if ((*it)->id == id)
+            return (*it)->make();
+    }
 
-    // Try loading python modules
     return 0;
 }
 
