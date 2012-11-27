@@ -30,7 +30,6 @@
 
 #include "GCodeFeature.h"
 #include "TPGFeature.h"
-#include "Feature.h"
 #include "StockGeometry.h"
 #include "CamPartsList.h"
 #include "TPGList.h"
@@ -81,17 +80,12 @@ void CamExport initCam()
     // call PyType_Ready, otherwise we run into a segmentation fault, later on.
     // This function is responsible for adding inherited slots from a type's base class.
 
-    Cam::Feature             ::init();
     Cam::CamFeature          ::init();
     Cam::CamPartsList        ::init();
     Cam::GCodeFeature        ::init();
     Cam::StockGeometry       ::init();
     Cam::TPGFeature          ::init();
     Cam::TPGList             ::init();
-
-    //Initialise and Register and C++ TPG Plugins [TODO SHOULD WE INITIALISE THESE IN A SEPERATE FILE FOR READABILITY]
-    Cam::MyPlugin            ::init();
-    Cam::TPGFactory().registerPlugin<Cam::MyPlugin>(new Cam::LibTPGDescriptor("MyPlugin", "My CAM Plugin", "My Plugin's Description"));
 
     Base::Console().Log("Loading CAM module... done\n");
 
