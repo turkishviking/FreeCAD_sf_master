@@ -64,9 +64,11 @@
 # include <QMenu>
 # include <QMessageBox>
 # include <QPainter>
+# include <QTextStream>
 #endif
 
 #include <Inventor/SbTime.h>
+#include <boost/scoped_ptr.hpp>
 
 /// Here the FreeCAD includes sorted by Base,App,Gui......
 #include <Base/Tools.h>
@@ -207,6 +209,8 @@ const Part::Geometry* GeoById(const std::vector<Part::Geometry*> GeoList, int Id
 //**************************************************************************
 // Construction/Destruction
 
+/* TRANSLATOR SketcherGui::ViewProviderSketch */
+
 PROPERTY_SOURCE(SketcherGui::ViewProviderSketch, PartGui::ViewProvider2DObject)
 
 
@@ -322,6 +326,36 @@ void ViewProviderSketch::snapToGrid(double &x, double &y)
     }
 }
 
+void ViewProviderSketch::getProjectingLine(const SbVec2s& pnt, const Gui::View3DInventorViewer *viewer, SbLine& line) const
+{
+    const SbViewportRegion& vp = viewer->getViewportRegion();
+
+    short x,y; pnt.getValue(x,y);
+    SbVec2f siz = vp.getViewportSize();
+    float dX, dY; siz.getValue(dX, dY);
+
+    float fRatio = vp.getViewportAspectRatio();
+    float pX = (float)x / float(vp.getViewportSizePixels()[0]);
+    float pY = (float)y / float(vp.getViewportSizePixels()[1]);
+
+    // now calculate the real points respecting aspect ratio information
+    //
+    if (fRatio > 1.0f) {
+        pX = (pX - 0.5f*dX) * fRatio + 0.5f*dX;
+    }
+    else if (fRatio < 1.0f) {
+        pY = (pY - 0.5f*dY) / fRatio + 0.5f*dY;
+    }
+
+    SoCamera* pCam = viewer->getCamera();
+    if (!pCam) return;
+    SbViewVolume  vol = pCam->getViewVolume();
+
+    float focalDist = pCam->focalDistance.getValue();
+
+    vol.projectPointToLine(SbVec2f(pX,pY), line);
+}
+
 void ViewProviderSketch::getCoordsOnSketchPlane(double &u, double &v,const SbVec3f &point, const SbVec3f &normal)
 {
     // Plane form
@@ -356,10 +390,13 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
     assert(edit);
 
     // Calculate 3d point to the mouse position
-    SbVec3f point = viewer->getPointOnScreen(cursorPos);
-    SbVec3f normal = viewer->getViewDirection();
+    SbLine line;
+    getProjectingLine(cursorPos, viewer, line);
+    SbVec3f point = line.getPosition();
+    SbVec3f normal = line.getDirection();
 
-    SoPickedPoint *pp = this->getPointOnRay(cursorPos, viewer);
+    // use scoped_ptr to make sure that instance gets deleted in all cases
+    boost::scoped_ptr<SoPickedPoint> pp(this->getPointOnRay(cursorPos, viewer));
 
     // Radius maximum to allow double click event
     const int dblClickRadius = 5;
@@ -769,11 +806,11 @@ bool ViewProviderSketch::mouseMove(const SbVec2s &cursorPos, Gui::View3DInventor
     assert(edit);
 
     // Calculate 3d point to the mouse position
-    SbVec3f point = viewer->getPointOnScreen(cursorPos);
-    SbVec3f normal = viewer->getViewDirection();
+    SbLine line;
+    getProjectingLine(cursorPos, viewer, line);
 
     double x,y;
-    getCoordsOnSketchPlane(x,y,point,normal);
+    getCoordsOnSketchPlane(x,y,line.getPosition(),line.getDirection());
     snapToGrid(x, y);
 
     bool preselectChanged;
@@ -781,9 +818,9 @@ bool ViewProviderSketch::mouseMove(const SbVec2s &cursorPos, Gui::View3DInventor
         Mode!=STATUS_SKETCH_DragConstraint) {
 
         SoPickedPoint *pp = this->getPointOnRay(cursorPos, viewer);
-
         int PtIndex,GeoIndex,ConstrIndex,CrossIndex;
         preselectChanged = detectPreselection(pp,PtIndex,GeoIndex,ConstrIndex,CrossIndex);
+        delete pp;
     }
 
     switch (Mode) {
@@ -2621,12 +2658,14 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
     for (std::vector<Sketcher::Constraint *>::const_iterator it=constrlist.begin(); it != constrlist.end(); ++it) {
         // root separator for one constraint
         SoSeparator *sep = new SoSeparator();
+        sep->ref();
         // no caching for fluctuand data structures
         sep->renderCaching = SoSeparator::OFF;
 
         // every constrained visual node gets its own material for preselection and selection
-        SoMaterial *Material = new SoMaterial;
-        Material->diffuseColor = ConstrDimColor;
+        SoMaterial *mat = new SoMaterial;
+        mat->ref();
+        mat->diffuseColor = ConstrDimColor;
 
         // distinguish different constraint types to build up
         switch ((*it)->Type) {
@@ -2645,13 +2684,16 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
                     sep->addChild(text);
                     edit->constrGroup->addChild(anno);
                     edit->vConstrType.push_back((*it)->Type);
+                    // nodes not needed
+                    sep->unref();
+                    mat->unref();
                     continue; // jump to next constraint
                 }
                 break;
             case Horizontal:
             case Vertical:
                 {
-                    sep->addChild(Material);
+                    sep->addChild(mat);
                     sep->addChild(new SoZoomTranslation()); // 1.
                     sep->addChild(new SoImage());       // 2. constraint icon
 
@@ -2667,7 +2709,7 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
             case Equal:
                 {
                     // Add new nodes to Constraint Seperator
-                    sep->addChild(Material);
+                    sep->addChild(mat);
                     sep->addChild(new SoZoomTranslation()); // 1.
                     sep->addChild(new SoImage());           // 2. first constraint icon
                     sep->addChild(new SoZoomTranslation()); // 3.
@@ -2681,7 +2723,7 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
             case Tangent:
                 {
                     // Add new nodes to Constraint Seperator
-                    sep->addChild(Material);
+                    sep->addChild(mat);
                     sep->addChild(new SoZoomTranslation()); // 1.
                     sep->addChild(new SoImage());           // 2. constraint icon
 
@@ -2713,9 +2755,12 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
                 break;
             default:
                 edit->vConstrType.push_back(None);
-            }
+        }
 
         edit->constrGroup->addChild(sep);
+        // decrement ref counter again
+        sep->unref();
+        mat->unref();
     }
 }
 
@@ -2851,6 +2896,42 @@ bool ViewProviderSketch::setEdit(int ModNum)
     return true;
 }
 
+QString ViewProviderSketch::appendConflictMsg(const std::vector<int> &conflicting)
+{
+    QString msg;
+    QTextStream ss(&msg);
+    if (conflicting.size() > 0) {
+        if (conflicting.size() == 1)
+            ss << tr("Please remove the following constraint:");
+        else
+            ss << tr("Please remove at least one of the following constraints:");
+        ss << "\n";
+        ss << conflicting[0];
+        for (unsigned int i=1; i < conflicting.size(); i++)
+            ss << ", " << conflicting[i];
+        ss << "\n";
+    }
+    return msg;
+}
+
+QString ViewProviderSketch::appendRedundantMsg(const std::vector<int> &redundant)
+{
+    QString msg;
+    QTextStream ss(&msg);
+    if (redundant.size() > 0) {
+        if (redundant.size() == 1)
+            ss << tr("Please remove the following redundant constraint:");
+        else
+            ss << tr("Please remove the following redundant constraints:");
+        ss << "\n";
+        ss << redundant[0];
+        for (unsigned int i=1; i < redundant.size(); i++)
+            ss << ", " << redundant[i];
+        ss << "\n";
+    }
+    return msg;
+}
+
 void ViewProviderSketch::solveSketch(void)
 {
     // set up the sketch and diagnose possible conflicts
@@ -2858,47 +2939,46 @@ void ViewProviderSketch::solveSketch(void)
                                            getSketchObject()->Constraints.getValues(),
                                            getSketchObject()->getExternalGeometryCount());
     if (getSketchObject()->Geometry.getSize() == 0) {
-        signalSetUp(QString::fromLatin1("Empty sketch"));
+        signalSetUp(tr("Empty sketch"));
         signalSolved(QString());
     }
     else if (dofs < 0) { // over-constrained sketch
         std::string msg;
         SketchObject::appendConflictMsg(edit->ActSketch.getConflicting(), msg);
-        signalSetUp(QString::fromLatin1("<font color='red'>Over-constrained sketch<br/>%1</font>")
+        signalSetUp(QString::fromLatin1("<font color='red'>%1<br/>%2</font>")
+                    .arg(tr("Over-constrained sketch"))
                     .arg(QString::fromStdString(msg)));
         signalSolved(QString());
     }
     else if (edit->ActSketch.hasConflicts()) { // conflicting constraints
-        std::string msg;
-        SketchObject::appendConflictMsg(edit->ActSketch.getConflicting(), msg);
-        signalSetUp(QString::fromLatin1("<font color='red'>Sketch contains conflicting constraints<br/>%1</font>")
-                    .arg(QString::fromStdString(msg)));
+        signalSetUp(QString::fromLatin1("<font color='red'>%1<br/>%2</font>")
+                    .arg(tr("Sketch contains conflicting constraints"))
+                    .arg(appendConflictMsg(edit->ActSketch.getConflicting())));
         signalSolved(QString());
     }
     else {
         if (edit->ActSketch.hasRedundancies()) { // redundant constraints
-            std::string msg;
-            SketchObject::appendRedundantMsg(edit->ActSketch.getRedundant(), msg);
-            signalSetUp(QString::fromLatin1("<font color='orange'>Sketch contains redundant constraints<br/>%1</font>")
-                        .arg(QString::fromStdString(msg)));
+            signalSetUp(QString::fromLatin1("<font color='orange'>%1<br/>%2</font>")
+                        .arg(tr("Sketch contains redundant constraints"))
+                        .arg(appendRedundantMsg(edit->ActSketch.getRedundant())));
         }
         if (edit->ActSketch.solve() == 0) { // solving the sketch
             if (dofs == 0) {
                 // color the sketch as fully constrained
                 edit->FullyConstrained = true;
                 if (!edit->ActSketch.hasRedundancies())
-                    signalSetUp(QString::fromLatin1("<font color='green'>Fully constrained sketch </font>"));
+                    signalSetUp(QString::fromLatin1("<font color='green'>%1</font>").arg(tr("Fully constrained sketch")));
             }
             else if (!edit->ActSketch.hasRedundancies()) {
                 if (dofs == 1)
-                    signalSetUp(QString::fromLatin1("Under-constrained sketch with 1 degree of freedom"));
+                    signalSetUp(tr("Under-constrained sketch with 1 degree of freedom"));
                 else
-                    signalSetUp(QString::fromLatin1("Under-constrained sketch with %1 degrees of freedom").arg(dofs));
+                    signalSetUp(tr("Under-constrained sketch with %1 degrees of freedom").arg(dofs));
             }
-            signalSolved(QString::fromLatin1("Solved in %1 sec").arg(edit->ActSketch.SolveTime));
+            signalSolved(tr("Solved in %1 sec").arg(edit->ActSketch.SolveTime));
         }
         else {
-            signalSolved(QString::fromLatin1("Unsolved (%1 sec)").arg(edit->ActSketch.SolveTime));
+            signalSolved(tr("Unsolved (%1 sec)").arg(edit->ActSketch.SolveTime));
         }
     }
 }
