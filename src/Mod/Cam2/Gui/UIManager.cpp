@@ -36,7 +36,7 @@
 #include "UIManager.h"
 #include "TPGListModel.h"
 
-#include "../App/TPG/PyTPGManager.h"
+#include "../App/TPG/PyTPGFactory.h"
 
 namespace CamGui {
 
@@ -82,7 +82,7 @@ void UIManagerInst::reloadTPGs()
     QMessageBox::information( Gui::getMainWindow(), "Information", "Python not initialised" );
   else {
     // get the TPGs
-    std::vector<Cam::TPGDescriptor*> *plugins = &Cam::PyTPGManager().scanPlugins();
+    std::vector<Cam::TPGDescriptor*> *plugins = &Cam::PyTPGFactory().scanPlugins();
     printf("Plugins:\n");
     for (int i = 0; i < plugins->size(); i++) {
       (*plugins)[i]->print();
