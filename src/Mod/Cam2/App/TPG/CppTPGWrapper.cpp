@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) 2012 Luke Parry    (l.parry@warwick.ac.uk)              *
+ *   Copyright (c) 2012 Andrew Robinson <andrewjrobinson@gmail.com>        *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -24,104 +24,48 @@
 #ifndef _PreComp_
 #endif
 
-#include "../TPGFeature.h"
-#include "TPG.h"
+#include "CppTPGWrapper.h"
 
+namespace Cam {
 
-using namespace Cam;
-TYPESYSTEM_SOURCE_ABSTRACT(Cam::TPG, Base::BaseClass)
-
-TPG::TPG()
-//    : state(LOADED)
-{
-    // Load the TPG Settings Class and Initialise
-//    settings = new TPGSettings();
-//    settings->initialise();
-//    settings->loadSettings();
-
-    // Load the TPG Cache and initialise
-//    cache = new TPGCache();
-//    cache->initialise();
+CppTPGWrapper::CppTPGWrapper(TPG *impl, CppTPGPlugin *plugin)
+: TPG() {
+    this->impl = impl;
+    this->plugin = plugin;
 }
 
-TPG::TPG(const QString &TPGId, const QString &TPGName, const QString &TPGDescription)
-{
-  this->id = TPGId;
-  this->name = TPGName;
-  this->description = TPGDescription;
+CppTPGWrapper::~CppTPGWrapper() {
+    // cleanup through the library that created this implementation
+    if (plugin != NULL && impl != NULL)
+        plugin->delTPG(impl);
 }
-
-TPG::~TPG()
-{
-//    delete settings;
-//    delete cache;
-}
-
-void TPG::initialise(TPGFeature *feat)
-{
-//    // We need to intiailise and associate this toolpath with a TPGFeature - it doesn't make sense to be standalone
-//    if(!feat)
-//        return;
-//
-//    tpgFeat = feat;
-
-    this->initialiseSettings();
-    //Check if there is input that can be used
-
-//    // If everything is okay, set status to intiailised
-//    this->state = INITIALISED;
-}
-
-//TPG* TPG::makeTPG()
-//{
-//    return 0;
-//}
-
-void TPG::initialiseSettings()
-{
-
-}
-
-//void TPG::stop()
-//{
-//
-//}
-//
-//void TPG::getSTLModel() {}
-
-
-
-// TPG API methods.  Used by the CAM workbench to run the TPG
 
 /**
  * Returns a list of action names supported by this TPG.
  *
  * Note: if this TPG only does one thing then just return a list containing 'default'
  */
-std::vector<QString> &TPG::getActions()
+std::vector<QString> &CppTPGWrapper::getActions()
 {
-	return this->actions;
+    return impl->getActions();
 }
 
 /**
  * Get the settings for a given action
  */
-TPGSettings *TPG::getSettings(QString &action)
+TPGSettings *CppTPGWrapper::getSettings(QString &action)
 {
-	std::map<QString, TPGSettings*>::iterator it;
-	it = this->settings.find(action);
-	if (it != this->settings.end())
-		return it->second->clone();
-	return NULL;
+    return impl->getSettings(action);
 }
 
 /**
  * Run the TPG to generate the ToolPath code.
  *
- * Note: the return will change once the TP Language has been set in stone
+ * Note: the return will change once the TP Language has been set in store
  */
-void TPG::run(TPGSettings *settings, QString action="")
+void CppTPGWrapper::run(TPGSettings *settings, QString action)
 {
-	return;
+    impl->run(settings, action);
 }
 
+} /* namespace Cam */

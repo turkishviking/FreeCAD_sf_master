@@ -59,8 +59,23 @@ SET(TPG_SRCS
     TPG/TPGPython.h
     TPG/TPGSettings.cpp
     TPG/TPGSettings.h
-    TPG/PyTPGManager.cpp
-    TPG/PyTPGManager.h
+    
+    TPG/PyTPGFactory.cpp
+    TPG/PyTPGFactory.h
+    TPG/PyTPGDescriptor.cpp
+    TPG/PyTPGDescriptor.h
+    
+    TPG/CppTPG.h
+    TPG/CppTPGDescriptor.cpp
+    TPG/CppTPGDescriptor.h
+    TPG/CppTPGDescriptorWrapper.cpp
+    TPG/CppTPGDescriptorWrapper.h
+    TPG/CppTPGFactory.cpp
+    TPG/CppTPGFactory.h
+    TPG/CppTPGPlugin.cpp
+    TPG/CppTPGPlugin.h
+    TPG/CppTPGWrapper.cpp
+    TPG/CppTPGWrapper.h
 )
 SOURCE_GROUP("TPG" FILES ${TPG_SRCS})
 
