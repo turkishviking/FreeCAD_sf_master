@@ -71,6 +71,7 @@ void UIManagerInst::addTPG(Cam::TPGDescriptor *tpg) {
                 "This is where I would add a '" + tpg->name
                         + "' TPG to the document");
     Cam::TPG *tp = tpg->make();
+    QMessageBox::information(Gui::getMainWindow(), "Information", "Successfully created a TPG with id "+tp->getId());
     delete tp;
 }
 /**
