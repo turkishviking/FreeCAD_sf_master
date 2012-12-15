@@ -24,15 +24,20 @@
 #ifndef _PreComp_
 #endif
 
+#include <Base/Placement.h>
 #include "StockGeometry.h"
 
 using namespace Cam;
 
 PROPERTY_SOURCE(Cam::StockGeometry, App::DocumentObject)
 
+const char *stockGeomGroup = "Stock Geometry Feature";
+
 StockGeometry::StockGeometry()
 {
-    ADD_PROPERTY(Geometry,(0));
+    Base::Placement place = Base::Placement();
+//     ADD_PROPERTY_TYPE(Base, place , stockGeomGroup, (App::PropertyType)(App::Prop_Output) ,"Origin Placement");
+    ADD_PROPERTY_TYPE(Geometry,(0), stockGeomGroup, (App::PropertyType)(App::Prop_None) ,"Stock Geometry");
 }
 
 StockGeometry::~StockGeometry()
@@ -42,7 +47,8 @@ StockGeometry::~StockGeometry()
 
 short StockGeometry::mustExecute() const
 {
-    if (Geometry.isTouched())
+    if (Geometry.isTouched() ||
+        Base.isTouched())
         return 1;
     return 0;
 }

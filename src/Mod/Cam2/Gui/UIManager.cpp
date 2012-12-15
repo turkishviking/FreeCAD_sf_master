@@ -41,7 +41,7 @@
 #include "../App/CamFeature.h"
 #include "../App/TPGList.h"
 #include "../App/TPGFeature.h"
-#include "../App/TPG/PyTPGManager.h"
+#include "../App/TPG/PyTPGFactory.h"
 
 #include "UIManager.h"
 #include "TPGListModel.h"
@@ -74,6 +74,7 @@ UIManagerInst::~UIManagerInst() {
 /**
  * A Slot to receive requests to add TPG's to the document tree.
  */
+
 void UIManagerInst::addTPG(Cam::TPGDescriptor *tpgDescriptor) 
 {
     if (tpgDescriptor == NULL) {
@@ -108,7 +109,8 @@ void UIManagerInst::addTPG(Cam::TPGDescriptor *tpgDescriptor)
 
     // Set a friendly label
     tpgFeat->Label.setValue(tpgDescriptor->name.toAscii());
-    
+    Cam::TPG *temp = tpgDescriptor->make();
+    QMessageBox(QMessageBox::Warning, QString::fromAscii("Info"), temp->getName());
     // Attempt to create and load the TPG Plugin
     bool loadPlugin = tpgFeat->loadTPG(tpgDescriptor);
     
@@ -120,26 +122,20 @@ void UIManagerInst::addTPG(Cam::TPGDescriptor *tpgDescriptor)
         // remove TPGFeature
         doc->getDocument()->remObject(tpgFeatName.c_str());
     }
-
 }
 /**
  * A Slot to request a Library reload.
  */
 void UIManagerInst::reloadTPGs()
 {
-  if (!Py_IsInitialized())
-    QMessageBox::information( Gui::getMainWindow(), "Information", "Python not initialised" );
-  else {
+    // scan for TPGs
+    Cam::TPGFactory().scanPlugins();
+
     // get the TPGs
-    std::vector<Cam::TPGDescriptor*> *plugins = &Cam::PyTPGManager().scanPlugins();
-    printf("Plugins:\n");
-    for (int i = 0; i < plugins->size(); i++) {
-      (*plugins)[i]->print();
-    }
+    std::vector<Cam::TPGDescriptor*> *plugins = Cam::TPGFactory().getDescriptors();
 
     CamGui::TPGListModel *model = new CamGui::TPGListModel(plugins);
     Q_EMIT updatedTPGList(model);
-  }
 }
 
 #include "moc_UIManager.cpp"

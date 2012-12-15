@@ -24,8 +24,13 @@
 #ifndef _PreComp_
 #endif
 
+#include <Gui/Application.h>
 #include <Gui/Command.h>
+#include <Gui/Control.h>
+#include <Gui/Document.h>
 
+#include "../../App/CamPartsList.h"
+#include "TaskDlgEditCamFeature.h"
 #include "TaskDlgEditCamPartsList.h"
 #include "../ViewProviderCamPartsList.h"
 
@@ -60,9 +65,29 @@ void TaskDlgEditCamPartsList::clicked(int)
     
 }
 
+void TaskDlgEditCamPartsList::onSelectionChanged(const Gui::SelectionChanges& msg)
+{
+
+}
+
 bool TaskDlgEditCamPartsList::accept()
 {
-    return true;
+     camPartsListView->getObject()->clearParts();
+     
+     //Iterate through selection and save the current selection from the user 
+    const std::vector<Gui::SelectionObject> selection = Gui::Selection().getSelectionEx();
+    
+    if(selection.size() > 0) {
+        for(std::vector<Gui::SelectionObject>::const_iterator it = selection.begin(); it != selection.end(); ++it) {
+          Gui::SelectionObject obj = (*it);
+          camPartsListView->getObject()->addPart(obj.getObject());
+        }
+    }
+
+    std::string document = getDocumentName(); // needed because resetEdit() deletes this instance
+    Gui::Command::doCommand(Gui::Command::Gui,"Gui.getDocument('%s').resetEdit()", document.c_str());
+    Gui::Command::doCommand(Gui::Command::Doc,"App.getDocument('%s').recompute()", document.c_str());
+        
 }
 
 bool TaskDlgEditCamPartsList::reject()
@@ -70,7 +95,6 @@ bool TaskDlgEditCamPartsList::reject()
     std::string document = getDocumentName(); // needed because resetEdit() deletes this instance
     Gui::Command::doCommand(Gui::Command::Gui,"Gui.getDocument('%s').resetEdit()", document.c_str());
     Gui::Command::doCommand(Gui::Command::Doc,"App.getDocument('%s').recompute()", document.c_str());
-
     return true;
 }
 

@@ -25,7 +25,6 @@
 
 #include <App/DocumentObject.h>
 #include <App/PropertyLinks.h>
-#include <App/PropertyStandard.h>
 #include <App/PropertyFile.h>
 #include <App/FeaturePython.h>
 
@@ -61,6 +60,10 @@ public:
 
     /// Property
     App::PropertyLink     Result;      // Link to the GCodeFeature (End Result - TOP of TPG hierarchy)
+    App::PropertyLink     TPGListLink;      // Link to the GCodeFeature (End Result - TOP of TPG hierarchy)
+    App::PropertyLink     StockGeometryObject;
+    App::PropertyLink     CamPartsListObject;
+    
 
     /** @name methods overide Base Class */
     //@{
@@ -81,16 +84,14 @@ public:
     //@}
 
     /// Getters
-    StockGeometry * getStockGeometry() const { return stockGeometry; }
-    CamPartsList  * getPartsContainer() const { return camPartsList; }
-    TPGList       * getTPGContainer() const { return tpgList; }
-    GCodeFeature  * getGCodeFeature() const { return getGCodeResult(); }
-
-    GCodeFeature * getGCodeResult() const;
+    StockGeometry * getStockGeometry() const;
+    CamPartsList  * getPartsContainer() const;
+    TPGList       * getTPGContainer() const;
+    GCodeFeature  * getGCodeFeature() const;
 
     void updateTPG();
     // Convenience method (Containment not necessarily needed)
-    bool hasContainment() { return (stockGeometry == 0) ? true : false; }
+    bool hasContainment() { return (getStockGeometry() == 0) ? true : false; }
 
 protected:
     ///Connections
@@ -98,21 +99,13 @@ protected:
 
 protected:
     /// get called by the container when a property has changed
-    //virtual void onChanged(const App::Property* /*prop*/);
+    //     virtual void onChanged(const App::Property* /*prop*/);
     virtual void onSettingDocument();
-    virtual void onDocumentRestored();
-    virtual void onFinishDuplicating();
 
-    void rebuildLinks();
-
-    CamPartsList    *camPartsList;
-    TPGList         *tpgList;
-    StockGeometry   *stockGeometry;
 private:
 
 };
 
-// typedef App::FeaturePythonT<CamFeature> CamFeaturetPython;
 
 } //namespace Cam
 

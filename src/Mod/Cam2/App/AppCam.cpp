@@ -30,7 +30,6 @@
 
 #include "GCodeFeature.h"
 #include "TPGFeature.h"
-#include "Feature.h"
 #include "StockGeometry.h"
 #include "CamPartsList.h"
 #include "TPGList.h"
@@ -38,7 +37,7 @@
 
 #include "TPG/TPGFactory.h"
 #include "TPG/TPG.h"
-#include "TPG/PyTPGManager.h"
+#include "TPG/PyTPGFactory.h"
 
 #include "CamFeature.h"
 
@@ -73,7 +72,7 @@ void CamExport initCam()
     if (pyCamMod != NULL)
     {
         PyModule_AddObject(camModule, "PyCam", pyCamMod);
-        Cam::PyTPGManager().loadCallbackFromModule(pyCamMod);
+        Cam::PyTPGFactory().loadCallbackFromModule(pyCamMod);
     	Py_DecRef(pyCamMod);
     }
 
@@ -81,7 +80,6 @@ void CamExport initCam()
     // call PyType_Ready, otherwise we run into a segmentation fault, later on.
     // This function is responsible for adding inherited slots from a type's base class.
 
-    Cam::Feature             ::init();
     Cam::CamFeature          ::init();
     Cam::CamPartsList        ::init();
     Cam::GCodeFeature        ::init();
@@ -89,10 +87,8 @@ void CamExport initCam()
     Cam::TPGFeature          ::init();
     Cam::TPGList             ::init();
 
-    //Initialise and Register and C++ TPG Plugins [TODO SHOULD WE INITIALISE THESE IN A SEPERATE FILE FOR READABILITY]
-    Cam::MyPlugin            ::init();
-    Cam::TPGFactory().registerPlugin<Cam::MyPlugin>(new Cam::LibTPGDescriptor("MyPlugin", "My CAM Plugin", "My Plugin's Description"));
-
+    // Perform initial scan to load all TPGDescriptors in the factory to ensure that documents can load these
+    Cam::TPGFactory().scanPlugins();
     Base::Console().Log("Loading CAM module... done\n");
 
 }
