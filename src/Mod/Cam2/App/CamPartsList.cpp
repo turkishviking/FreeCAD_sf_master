@@ -67,6 +67,11 @@ CamPartsList::~CamPartsList()
 
 short CamPartsList::mustExecute() const
 {
+    // If Tolerance Property is touched
+    if(Tolerance.isTouched())
+        return 1;
+    
+    // Check if within the selection, any Document Object have been touched
     const std::vector<App::DocumentObject *> vals = ExternalGeometry.getValues();
     bool PartsTouched = false;
     for(std::vector<App::DocumentObject *>::const_iterator it = vals.begin(); it < vals.end(); ++it) {
@@ -117,7 +122,15 @@ int CamPartsList::removePart(const char *name)
         }
     }
     return -1;
+}
 
+int CamPartsList::clearParts()
+{
+    const std::vector<App::DocumentObject *> vals = ExternalGeometry.getValues();
+    std::vector<App::DocumentObject *> newVals;
+
+    ExternalGeometry.setValues(newVals);
+    return ExternalGeometry.getSize();
 }
 
 void CamPartsList::generateGeometry()
@@ -283,8 +296,12 @@ void CamPartsList::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp
 
 App::DocumentObjectExecReturn *CamPartsList::execute(void)
 {
-    this->touch();
-    return App::DocumentObject::StdReturn;
+    if(this->ExternalGeometry.getValues().size() > 0) {
+        this->touch();
+        return App::DocumentObject::StdReturn;
+    }
+    else
+      return new App::DocumentObjectExecReturn("Selection is empty");
 }
 
 // PyObject *CamPartsList::getPyObject(void)
