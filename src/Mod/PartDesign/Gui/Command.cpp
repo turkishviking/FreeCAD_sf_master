@@ -33,6 +33,7 @@
 # include <TopTools_ListOfShape.hxx>
 # include <TopTools_IndexedDataMapOfShapeListOfShape.hxx>
 # include <TopTools_IndexedMapOfShape.hxx>
+# include <BRepAdaptor_Surface.hxx>
 # include <QMessageBox>
 #endif
 
@@ -726,6 +727,117 @@ bool CmdPartDesignChamfer::isActive(void)
 }
 
 //===========================================================================
+// PartDesign_Draft
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignDraft);
+
+CmdPartDesignDraft::CmdPartDesignDraft()
+  :Command("PartDesign_Draft")
+{
+    sAppModule    = "PartDesign";
+    sGroup        = QT_TR_NOOP("PartDesign");
+    sMenuText     = QT_TR_NOOP("Draft");
+    sToolTipText  = QT_TR_NOOP("Make a draft on a face");
+    sWhatsThis    = sToolTipText;
+    sStatusTip    = sToolTipText;
+    sPixmap       = "PartDesign_Draft";
+}
+
+void CmdPartDesignDraft::activated(int iMsg)
+{
+    std::vector<Gui::SelectionObject> selection = getSelection().getSelectionEx();
+
+    if (selection.size() < 1) {
+        QMessageBox::warning(Gui::getMainWindow(), QObject::tr("Wrong selection"),
+            QObject::tr("Select one or more faces."));
+        return;
+    }
+
+    if (!selection[0].isObjectTypeOf(Part::Feature::getClassTypeId())){
+        QMessageBox::warning(Gui::getMainWindow(), QObject::tr("Wrong object type"),
+            QObject::tr("Draft works only on parts"));
+        return;
+    }
+
+    Part::Feature *base = static_cast<Part::Feature*>(selection[0].getObject());
+
+    const Part::TopoShape& TopShape = base->Shape.getShape();
+    if (TopShape._Shape.IsNull()){
+        QMessageBox::warning(Gui::getMainWindow(), QObject::tr("Wrong selection"),
+            QObject::tr("Shape of selected Part is empty"));
+        return;
+    }
+
+    std::vector<std::string> SubNames = std::vector<std::string>(selection[0].getSubNames());
+    int i = 0;
+
+    while(i < SubNames.size())
+    {
+        std::string aSubName = static_cast<std::string>(SubNames.at(i));
+
+        if(aSubName.size() > 4 && aSubName.substr(0,4) == "Face") {
+            // Check for valid face types
+            TopoDS_Face face = TopoDS::Face(TopShape.getSubShape(aSubName.c_str()));
+            BRepAdaptor_Surface sf(face);
+            if ((sf.GetType() != GeomAbs_Plane) && (sf.GetType() != GeomAbs_Cylinder) && (sf.GetType() != GeomAbs_Cone))
+                SubNames.erase(SubNames.begin()+i);
+        } else {
+            // empty name or any other sub-element
+            SubNames.erase(SubNames.begin()+i);
+        }
+
+        i++;
+    }
+
+    if (SubNames.size() == 0) {
+        QMessageBox::warning(Gui::getMainWindow(), QObject::tr("Wrong selection"),
+        QObject::tr("No draft possible on selected faces"));
+        return;
+    }
+
+    std::string SelString;
+    SelString += "(App.";
+    SelString += "ActiveDocument";
+    SelString += ".";
+    SelString += selection[0].getFeatName();
+    SelString += ",[";
+    for(std::vector<std::string>::const_iterator it = SubNames.begin();it!=SubNames.end();++it){
+        SelString += "\"";
+        SelString += *it;
+        SelString += "\"";
+        if(it != --SubNames.end())
+            SelString += ",";
+    }
+    SelString += "])";
+
+    std::string FeatName = getUniqueObjectName("Draft");
+
+    // We don't create any defaults for neutral plane and pull direction, but Draft::execute()
+    // will choose them.
+    // Note: When the body feature is there, the best thing would be to get pull direction and
+    // neutral plane from the preceding feature in the tree. Or even store them as default in
+    // the Body feature itself
+    openCommand("Make Draft");
+    doCommand(Doc,"App.activeDocument().addObject(\"PartDesign::Draft\",\"%s\")",FeatName.c_str());
+    doCommand(Doc,"App.activeDocument().%s.Base = %s",FeatName.c_str(),SelString.c_str());
+    doCommand(Doc,"App.activeDocument().%s.Angle = %f",FeatName.c_str(), 1.5);
+    updateActive();
+    if (isActiveObjectValid()) {
+        doCommand(Gui,"Gui.activeDocument().hide(\"%s\")",selection[0].getFeatName());
+    }
+    doCommand(Gui,"Gui.activeDocument().setEdit('%s')",FeatName.c_str());
+
+    copyVisual(FeatName.c_str(), "ShapeColor", selection[0].getFeatName());
+    copyVisual(FeatName.c_str(), "LineColor",  selection[0].getFeatName());
+    copyVisual(FeatName.c_str(), "PointColor", selection[0].getFeatName());
+}
+
+bool CmdPartDesignDraft::isActive(void)
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
 // PartDesign_Mirrored
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignMirrored);
@@ -783,7 +895,10 @@ void CmdPartDesignMirrored::activated(int iMsg)
     // Exception (Thu Sep  6 11:52:01 2012): 'App.Document' object has no attribute 'Mirrored'
     updateActive(); // Helps to ensure that the object already exists when the next command comes up
     doCommand(Doc,str.str().c_str());
-    doCommand(Doc,"App.activeDocument().%s.StdMirrorPlane = \"XY\"", FeatName.c_str());
+    Part::Part2DObject *sketch = (static_cast<PartDesign::SketchBased*>(features.front()))->getVerifiedSketch();
+    if (sketch)
+        doCommand(Doc,"App.activeDocument().%s.MirrorPlane = (App.activeDocument().%s, [\"V_Axis\"])",
+                  FeatName.c_str(), sketch->getNameInDocument());
     for (std::vector<std::string>::iterator it = tempSelNames.begin(); it != tempSelNames.end(); ++it)
         doCommand(Gui,"Gui.activeDocument().%s.Visibility=False",it->c_str());
 
@@ -855,7 +970,10 @@ void CmdPartDesignLinearPattern::activated(int iMsg)
     doCommand(Doc,"App.activeDocument().addObject(\"PartDesign::LinearPattern\",\"%s\")",FeatName.c_str());
     updateActive();
     doCommand(Doc,str.str().c_str());
-    doCommand(Doc,"App.activeDocument().%s.StdDirection = \"X\"", FeatName.c_str());
+    Part::Part2DObject *sketch = (static_cast<PartDesign::SketchBased*>(features.front()))->getVerifiedSketch();
+    if (sketch)
+        doCommand(Doc,"App.activeDocument().%s.Direction = (App.activeDocument().%s, [\"H_Axis\"])",
+                  FeatName.c_str(), sketch->getNameInDocument());
     doCommand(Doc,"App.activeDocument().%s.Length = 100", FeatName.c_str());
     doCommand(Doc,"App.activeDocument().%s.Occurrences = 2", FeatName.c_str());
     for (std::vector<std::string>::iterator it = tempSelNames.begin(); it != tempSelNames.end(); ++it)
@@ -929,7 +1047,10 @@ void CmdPartDesignPolarPattern::activated(int iMsg)
     doCommand(Doc,"App.activeDocument().addObject(\"PartDesign::PolarPattern\",\"%s\")",FeatName.c_str());
     updateActive();
     doCommand(Doc,str.str().c_str());
-    doCommand(Doc,"App.activeDocument().%s.StdAxis = \"X\"", FeatName.c_str());
+    Part::Part2DObject *sketch = (static_cast<PartDesign::SketchBased*>(features.front()))->getVerifiedSketch();
+    if (sketch)
+        doCommand(Doc,"App.activeDocument().%s.Axis = (App.activeDocument().%s, [\"N_Axis\"])",
+                  FeatName.c_str(), sketch->getNameInDocument());
     doCommand(Doc,"App.activeDocument().%s.Angle = 360", FeatName.c_str());
     doCommand(Doc,"App.activeDocument().%s.Occurrences = 2", FeatName.c_str());
     for (std::vector<std::string>::iterator it = tempSelNames.begin(); it != tempSelNames.end(); ++it)
@@ -1103,6 +1224,7 @@ void CreatePartDesignCommands(void)
     rcCmdMgr.addCommand(new CmdPartDesignRevolution());
     rcCmdMgr.addCommand(new CmdPartDesignGroove());
     rcCmdMgr.addCommand(new CmdPartDesignFillet());
+    rcCmdMgr.addCommand(new CmdPartDesignDraft());
     //rcCmdMgr.addCommand(new CmdPartDesignNewSketch());
     rcCmdMgr.addCommand(new CmdPartDesignChamfer());
     rcCmdMgr.addCommand(new CmdPartDesignMirrored());

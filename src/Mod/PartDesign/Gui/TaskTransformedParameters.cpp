@@ -76,6 +76,12 @@ TaskTransformedParameters::TaskTransformedParameters(TaskMultiTransformParameter
     originalSelectionMode = false;
 }
 
+TaskTransformedParameters::~TaskTransformedParameters()
+{
+    // make sure to remove selection gate in all cases
+    Gui::Selection().rmvSelectionGate();
+}
+
 const bool TaskTransformedParameters::originalSelected(const Gui::SelectionChanges& msg)
 {
     if (msg.Type == Gui::SelectionChanges::AddSelection && originalSelectionMode) {
@@ -139,6 +145,16 @@ App::DocumentObject* TaskTransformedParameters::getSupportObject() const
     } else {
         PartDesign::Transformed* pcTransformed = static_cast<PartDesign::Transformed*>(TransformedView->getObject());
         return pcTransformed->getSupportObject();
+    }
+}
+
+App::DocumentObject* TaskTransformedParameters::getSketchObject() const
+{
+    if (insideMultiTransform) {
+        return parentTask->getSketchObject();
+    } else {
+        PartDesign::Transformed* pcTransformed = static_cast<PartDesign::Transformed*>(TransformedView->getObject());
+        return pcTransformed->getSketchObject();
     }
 }
 
